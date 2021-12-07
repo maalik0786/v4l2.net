@@ -1,13 +1,44 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-using System;
 using System.Runtime.InteropServices;
 
-namespace Iot.Device.Media.Interop.Unix.Libc;
+namespace Iot.Device.Media.Interop;
 
-internal partial class Interop
+internal class Interop
 {
+	private const string LibcLibrary = "libc";
+
+	[DllImport(LibcLibrary)]
+	internal static extern int close(int fd);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern int ioctl(int fd, uint request, IntPtr argp);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern int ioctl(int fd, int request, IntPtr argp);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern int ioctl(int fd, uint request, ulong argp);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern IntPtr mmap(IntPtr addr, int length, MemoryMappedProtections prot,
+		MemoryMappedFlags flags, int fd, int offset);
+
+	[DllImport(LibcLibrary)]
+	internal static extern int munmap(IntPtr addr, int length);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern int open([MarshalAs(UnmanagedType.LPStr)] string pathname,
+		FileOpenFlags flags);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern int read(int fd, IntPtr buf, int count);
+
+	[DllImport(LibcLibrary, SetLastError = true)]
+	internal static extern int write(int fd, IntPtr buf, int count);
+
+	// ReSharper disable InconsistentNaming
 	private const int _IOC_NRBITS = 8;
 	private const int _IOC_TYPEBITS = 8;
 	private const int _IOC_SIZEBITS = 14;
@@ -24,7 +55,7 @@ internal partial class Interop
 	private const int _IOC_WRITE = 1;
 	private const int _IOC_READ = 2;
 
-	internal static int _IOC(int dir, int type, int nr, int size) =>
+	private static int _IOC(int dir, int type, int nr, int size) =>
 		(dir << _IOC_DIRSHIFT) | (type << _IOC_TYPESHIFT) | (nr << _IOC_NRSHIFT) |
 		(size << _IOC_SIZESHIFT);
 
@@ -39,5 +70,5 @@ internal partial class Interop
 	internal static int _IOWR(int type, int nr, Type size) =>
 		_IOC(_IOC_READ | _IOC_WRITE, type, nr, _IOC_TYPECHECK(size));
 
-	internal static int _IOC_TYPECHECK(Type t) => Marshal.SizeOf(t);
+	private static int _IOC_TYPECHECK(Type t) => Marshal.SizeOf(t);
 }

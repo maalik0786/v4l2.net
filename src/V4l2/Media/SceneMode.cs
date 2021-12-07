@@ -63,5 +63,5 @@ public enum SceneMode
 	/// <summary>
 	/// Text
 	/// </summary>
-	Text = 13,
+	Text = 13
 }

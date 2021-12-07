@@ -1,36 +1,14 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-using System.Collections.Generic;
-
-namespace Iot.Device.Media.Interop.Unix.Libc;
-
-internal enum VideoSettings
-{
-	VIDIOC_QUERYCAP,
-	VIDIOC_ENUM_FMT,
-	VIDIOC_CROPCAP,
-	VIDIOC_G_CROP,
-	VIDIOC_S_CROP,
-	VIDIOC_G_FMT,
-	VIDIOC_S_FMT,
-	VIDIOC_REQBUFS,
-	VIDIOC_QUERYBUF,
-	VIDIOC_STREAMON,
-	VIDIOC_STREAMOFF,
-	VIDIOC_QBUF,
-	VIDIOC_DQBUF,
-	VIDIOC_ENUM_FRAMESIZES,
-	VIDIOC_G_CTRL,
-	VIDIOC_S_CTRL,
-	VIDIOC_QUERYCTRL,
-}
+namespace Iot.Device.Media.Interop;
 
 /// <summary>
 /// videodev2.h Request Definition
 /// </summary>
 internal class RawVideoSettings
 {
+	// ReSharper disable InconsistentNaming
 	public static int VIDIOC_QUERYCAP = Interop._IOR('V', 0, typeof(v4l2_capability));
 	public static int VIDIOC_ENUM_FMT = Interop._IOWR('V', 2, typeof(v4l2_fmtdesc));
 	public static int VIDIOC_G_FMT = Interop._IOWR('V', 4, typeof(v4l2_format));
@@ -58,7 +36,7 @@ internal class RawVideoSettings
 	public static int VIDIOC_ENUM_FRAMESIZES = Interop._IOWR('V', 74, typeof(v4l2_frmsizeenum));
 	public static int VIDIOC_PREPARE_BUF = Interop._IOWR('V', 93, typeof(v4l2_buffer));
 	public static Dictionary<VideoSettings, int> VideoSettingsMap =
-		new Dictionary<VideoSettings, int>
+		new()
 		{
 			{VideoSettings.VIDIOC_QUERYCAP, VIDIOC_QUERYCAP},
 			{VideoSettings.VIDIOC_ENUM_FMT, VIDIOC_ENUM_FMT},
@@ -76,6 +54,6 @@ internal class RawVideoSettings
 			{VideoSettings.VIDIOC_ENUM_FRAMESIZES, VIDIOC_ENUM_FRAMESIZES},
 			{VideoSettings.VIDIOC_G_CTRL, VIDIOC_G_CTRL},
 			{VideoSettings.VIDIOC_S_CTRL, VIDIOC_S_CTRL},
-			{VideoSettings.VIDIOC_QUERYCTRL, VIDIOC_QUERYCTRL},
+			{VideoSettings.VIDIOC_QUERYCTRL, VIDIOC_QUERYCTRL}
 		};
 }

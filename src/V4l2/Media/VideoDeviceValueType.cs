@@ -71,5 +71,5 @@ public enum VideoDeviceValueType : uint
 	/// <summary>
 	/// Scene Mode
 	/// </summary>
-	SceneMode = 10094874,
+	SceneMode = 10094874
 }

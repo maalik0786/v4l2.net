@@ -47,5 +47,5 @@ public enum WhiteBalanceEffect
 	/// <summary>
 	/// Shade
 	/// </summary>
-	Shade = 9,
+	Shade = 9
 }

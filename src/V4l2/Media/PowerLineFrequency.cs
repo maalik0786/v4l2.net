@@ -23,5 +23,5 @@ public enum PowerLineFrequency
 	/// <summary>
 	/// Auto
 	/// </summary>
-	Auto = 3,
+	Auto = 3
 }

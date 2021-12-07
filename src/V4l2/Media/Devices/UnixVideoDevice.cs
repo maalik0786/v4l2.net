@@ -1,12 +1,9 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
-using Iot.Device.Media.Interop.Unix.Libc;
+using Iot.Device.Media.Interop;
 
 namespace Iot.Device.Media.Media.Devices;
 
@@ -18,7 +15,7 @@ internal class UnixVideoDevice : VideoDevice
 	private const string DefaultDevicePath = "/dev/video";
 	private const int BufferCount = 1;
 	private int _deviceFileDescriptor = -1;
-	private static readonly object s_initializationLock = new object();
+	private static readonly object s_initializationLock = new();
 	/// <summary>
 	/// Path to video resources located on the platform.
 	/// </summary>
@@ -91,7 +88,7 @@ internal class UnixVideoDevice : VideoDevice
 		V4l2Struct(VideoSettings.VIDIOC_QUERYCTRL, ref query);
 
 		// Get current value
-		var ctrl = new v4l2_control {id = type,};
+		var ctrl = new v4l2_control {id = type};
 		V4l2Struct(VideoSettings.VIDIOC_G_CTRL, ref ctrl);
 		return new VideoDeviceValue
 		{
@@ -147,12 +144,12 @@ internal class UnixVideoDevice : VideoDevice
 		{
 			// Start data stream
 			var type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE;
-			var status = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, RawVideoSettings.VIDIOC_STREAMON,
+			var status = Interop.Interop.ioctl(_deviceFileDescriptor, RawVideoSettings.VIDIOC_STREAMON,
 				new IntPtr(&type));
 			var dataBuffer = GetFrameData(buffers);
 
 			// Close data stream
-			status = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, RawVideoSettings.VIDIOC_STREAMOFF,
+			status = Interop.Interop.ioctl(_deviceFileDescriptor, RawVideoSettings.VIDIOC_STREAMOFF,
 				new IntPtr(&type));
 			UnmappingFrameBuffers(buffers);
 			return dataBuffer;
@@ -165,7 +162,7 @@ internal class UnixVideoDevice : VideoDevice
 		var frame = new v4l2_buffer
 		{
 			type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE,
-			memory = v4l2_memory.V4L2_MEMORY_MMAP,
+			memory = v4l2_memory.V4L2_MEMORY_MMAP
 		};
 		var status = V4l2Struct(VideoSettings.VIDIOC_DQBUF, ref frame);
 
@@ -202,7 +199,7 @@ internal class UnixVideoDevice : VideoDevice
 			};
 			status = V4l2Struct(VideoSettings.VIDIOC_QUERYBUF, ref buffer);
 			buffers[i].Length = buffer.length;
-			buffers[i].Start = Interop.Unix.Libc.Interop.mmap(IntPtr.Zero, (int) buffer.length,
+			buffers[i].Start = Interop.Interop.mmap(IntPtr.Zero, (int) buffer.length,
 				MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE,
 				MemoryMappedFlags.MAP_SHARED, _deviceFileDescriptor, (int) buffer.m.offset);
 		}
@@ -225,7 +222,7 @@ internal class UnixVideoDevice : VideoDevice
 	{
 		// Unmapping the applied buffer to user space
 		for (uint i = 0; i < BufferCount; i++)
-			Interop.Unix.Libc.Interop.munmap(buffers[i].Start, (int) buffers[i].Length);
+			Interop.Interop.munmap(buffers[i].Start, (int) buffers[i].Length);
 	}
 
 	private void SetVideoConnectionSettings()
@@ -334,7 +331,6 @@ internal class UnixVideoDevice : VideoDevice
 
 	private void FillVideoConnectionSettings()
 	{
-		return;
 		if (Settings.CaptureSize.Equals(default))
 			Settings.CaptureSize = MaxSize;
 		if (Settings.ExposureType.Equals(default))
@@ -395,7 +391,7 @@ internal class UnixVideoDevice : VideoDevice
 		{
 			if (_deviceFileDescriptor >= 0)
 				return;
-			_deviceFileDescriptor = Interop.Unix.Libc.Interop.open(deviceFileName, FileOpenFlags.O_RDWR);
+			_deviceFileDescriptor = Interop.Interop.open(deviceFileName, FileOpenFlags.O_RDWR);
 			if (_deviceFileDescriptor < 0)
 				throw new IOException(
 					$"Error {Marshal.GetLastWin32Error()}. Can not open video device file '{deviceFileName}'.");
@@ -406,7 +402,7 @@ internal class UnixVideoDevice : VideoDevice
 	{
 		if (_deviceFileDescriptor >= 0)
 		{
-			Interop.Unix.Libc.Interop.close(_deviceFileDescriptor);
+			Interop.Interop.close(_deviceFileDescriptor);
 			_deviceFileDescriptor = -1;
 		}
 	}
@@ -423,7 +419,7 @@ internal class UnixVideoDevice : VideoDevice
 		var ioctlCode = RawVideoSettings.VideoSettingsMap[request];
 		var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(@struct));
 		Marshal.StructureToPtr(@struct, ptr, false);
-		var result = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, ioctlCode, ptr);
+		var result = Interop.Interop.ioctl(_deviceFileDescriptor, ioctlCode, ptr);
 		var errno = Marshal.GetLastWin32Error();
 		Debug.WriteLine(
 			request + " - " + ioctlCode + $" {result.ToString()}/{errno.ToString()}");

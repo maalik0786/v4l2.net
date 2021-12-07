@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Iot.Device.Media</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
 

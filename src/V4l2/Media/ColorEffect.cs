@@ -71,5 +71,5 @@ public enum ColorEffect
 	/// <summary>
 	/// Set CbCr
 	/// </summary>
-	SetCbCr = 15,
+	SetCbCr = 15
 }

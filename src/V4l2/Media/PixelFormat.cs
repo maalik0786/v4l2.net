@@ -1,7 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-using System;
 using System.Reflection;
 
 namespace Iot.Device.Media.Media;
@@ -810,7 +809,7 @@ public enum PixelFormat : uint
 	/// <summary>
 	/// D4XX
 	/// </summary>
-	D4XX = 1482175556,
+	D4XX = 1482175556
 }
 
 /// <summary>

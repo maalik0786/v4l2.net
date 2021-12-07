@@ -1,13 +1,12 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-using System;
 using System.Runtime.InteropServices;
-using Iot.Device.Media;
 using Iot.Device.Media.Media;
 
-namespace Iot.Device.Media.Interop.Unix.Libc;
+namespace Iot.Device.Media.Interop;
 
+// ReSharper disable InconsistentNaming
 public class Constants
 {
 	public const int VIDEO_MAX_FRAME = 32;
@@ -49,7 +48,7 @@ public enum v4l2_ctrl_type : uint
 	V4L2_CTRL_COMPOUND_TYPES = 0x0100,
 	V4L2_CTRL_TYPE_U8 = 0x0100,
 	V4L2_CTRL_TYPE_U16 = 0x0101,
-	V4L2_CTRL_TYPE_U32 = 0x0102,
+	V4L2_CTRL_TYPE_U32 = 0x0102
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -104,7 +103,7 @@ public enum v4l2_buf_type : uint
 	V4L2_BUF_TYPE_SDR_OUTPUT = 12,
 	V4L2_BUF_TYPE_META_CAPTURE = 13,
 	V4L2_BUF_TYPE_META_OUTPUT = 14,
-	V4L2_BUF_TYPE_PRIVATE = 0x80,
+	V4L2_BUF_TYPE_PRIVATE = 0x80
 	//  V4L2_BUF_TYPE_STREAMING = 0x04000000
 }
 
@@ -119,7 +118,7 @@ public enum v4l2_field : uint
 	V4L2_FIELD_SEQ_BT = 6,
 	V4L2_FIELD_ALTERNATE = 7,
 	V4L2_FIELD_INTERLACED_TB = 8,
-	V4L2_FIELD_INTERLACED_BT = 9,
+	V4L2_FIELD_INTERLACED_BT = 9
 }
 
 public enum v4l2_colorspace : uint
@@ -135,7 +134,7 @@ public enum v4l2_colorspace : uint
 	V4L2_COLORSPACE_SRGB = 8,
 	V4L2_COLORSPACE_ADOBERGB = 9,
 	V4L2_COLORSPACE_BT2020 = 10,
-	V4L2_COLORSPACE_RAW = 11,
+	V4L2_COLORSPACE_RAW = 11
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -160,7 +159,7 @@ public struct v4l2_pix_format
 		public uint hsv_enc;
 	}
 
-	//[MarshalAs(UnmanagedType.Struct
+	//[MarshalAs(UnmanagedType.Struct)]
 	public m_union union;
 	public uint quantization;
 	public uint xfer_func;
@@ -340,7 +339,7 @@ public enum v4l2_memory : uint
 	V4L2_MEMORY_MMAP = 1,
 	V4L2_MEMORY_USERPTR = 2,
 	V4L2_MEMORY_OVERLAY = 3,
-	V4L2_MEMORY_DMABUF = 4,
+	V4L2_MEMORY_DMABUF = 4
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -466,5 +465,5 @@ public enum v4l2_frmsizetypes : uint
 {
 	V4L2_FRMSIZE_TYPE_DISCRETE = 1,
 	V4L2_FRMSIZE_TYPE_CONTINUOUS = 2,
-	V4L2_FRMSIZE_TYPE_STEPWISE = 3,
+	V4L2_FRMSIZE_TYPE_STEPWISE = 3
 }
