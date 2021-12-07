@@ -3,7 +3,7 @@
 // See the LICENSE file in the project root for more information.
 namespace Iot.Device.Media.Interop.Unix;
 
-internal partial class Interop
+internal class Interop
 {
 	public const string LibcLibrary = "libc";
 }

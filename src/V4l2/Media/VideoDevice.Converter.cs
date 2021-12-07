@@ -19,12 +19,13 @@ public abstract partial class VideoDevice
 	/// <returns>RGB format colors.</returns>
 	public static Color[] YuvToRgb(MemoryStream stream)
 	{
+		int y, u, v;
 		var colors = new List<Color>();
 		while (stream.Position != stream.Length)
 		{
-			var y = stream.ReadByte();
-			var u = stream.ReadByte();
-			var v = stream.ReadByte();
+			y = stream.ReadByte();
+			u = stream.ReadByte();
+			v = stream.ReadByte();
 			colors.Add(YuvToRgb(y, u, v));
 		}
 		return colors.ToArray();
@@ -110,8 +111,7 @@ public abstract partial class VideoDevice
 		System.Drawing.Imaging.PixelFormat format =
 			System.Drawing.Imaging.PixelFormat.Format24bppRgb)
 	{
-		var width = (int) size.Width;
-		var height = (int) size.Height;
+		int width = (int) size.Width, height = (int) size.Height;
 		var pic = new Bitmap(width, height, format);
 		for (var x = 0; x < width; x++)
 		for (var y = 0; y < height; y++)

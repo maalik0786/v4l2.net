@@ -1,27 +1,29 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+using System.Collections.Generic;
+
 namespace Iot.Device.Media.Interop.Unix.Libc;
 
 internal enum VideoSettings
 {
-	VIDIOC_QUERYCAP = -2140645888,
-	VIDIOC_ENUM_FMT = -1069525502,
-	VIDIOC_CROPCAP = -1070836166,
-	VIDIOC_G_CROP = -1072409029,
-	VIDIOC_S_CROP = 1075074620,
-	VIDIOC_G_FMT = -1060350460,
-	VIDIOC_S_FMT = -1060350459,
-	VIDIOC_REQBUFS = -1072409080,
-	VIDIOC_QUERYBUF = -1069263351,
-	VIDIOC_STREAMON = 1074026002,
-	VIDIOC_STREAMOFF = 1074026003,
-	VIDIOC_QBUF = -1069263345,
-	VIDIOC_DQBUF = -1069263343,
-	VIDIOC_ENUM_FRAMESIZES = -1070836150,
-	VIDIOC_G_CTRL = -1073195493,
-	VIDIOC_S_CTRL = -1073195492,
-	VIDIOC_QUERYCTRL = -1069263324
+	VIDIOC_QUERYCAP,
+	VIDIOC_ENUM_FMT,
+	VIDIOC_CROPCAP,
+	VIDIOC_G_CROP,
+	VIDIOC_S_CROP,
+	VIDIOC_G_FMT,
+	VIDIOC_S_FMT,
+	VIDIOC_REQBUFS,
+	VIDIOC_QUERYBUF,
+	VIDIOC_STREAMON,
+	VIDIOC_STREAMOFF,
+	VIDIOC_QBUF,
+	VIDIOC_DQBUF,
+	VIDIOC_ENUM_FRAMESIZES,
+	VIDIOC_G_CTRL,
+	VIDIOC_S_CTRL,
+	VIDIOC_QUERYCTRL,
 }
 
 /// <summary>
@@ -55,4 +57,25 @@ internal class RawVideoSettings
 	public static int VIDIOC_S_PRIORITY = Interop._IOW('V', 68, typeof(uint));
 	public static int VIDIOC_ENUM_FRAMESIZES = Interop._IOWR('V', 74, typeof(v4l2_frmsizeenum));
 	public static int VIDIOC_PREPARE_BUF = Interop._IOWR('V', 93, typeof(v4l2_buffer));
+	public static Dictionary<VideoSettings, int> VideoSettingsMap =
+		new Dictionary<VideoSettings, int>
+		{
+			{VideoSettings.VIDIOC_QUERYCAP, VIDIOC_QUERYCAP},
+			{VideoSettings.VIDIOC_ENUM_FMT, VIDIOC_ENUM_FMT},
+			{VideoSettings.VIDIOC_CROPCAP, VIDIOC_CROPCAP},
+			{VideoSettings.VIDIOC_G_CROP, VIDIOC_G_CROP},
+			{VideoSettings.VIDIOC_S_CROP, VIDIOC_S_CROP},
+			{VideoSettings.VIDIOC_G_FMT, VIDIOC_G_FMT},
+			{VideoSettings.VIDIOC_S_FMT, VIDIOC_S_FMT},
+			{VideoSettings.VIDIOC_REQBUFS, VIDIOC_REQBUFS},
+			{VideoSettings.VIDIOC_QUERYBUF, VIDIOC_QUERYBUF},
+			{VideoSettings.VIDIOC_STREAMON, VIDIOC_STREAMON},
+			{VideoSettings.VIDIOC_STREAMOFF, VIDIOC_STREAMOFF},
+			{VideoSettings.VIDIOC_QBUF, VIDIOC_QBUF},
+			{VideoSettings.VIDIOC_DQBUF, VIDIOC_DQBUF},
+			{VideoSettings.VIDIOC_ENUM_FRAMESIZES, VIDIOC_ENUM_FRAMESIZES},
+			{VideoSettings.VIDIOC_G_CTRL, VIDIOC_G_CTRL},
+			{VideoSettings.VIDIOC_S_CTRL, VIDIOC_S_CTRL},
+			{VideoSettings.VIDIOC_QUERYCTRL, VIDIOC_QUERYCTRL},
+		};
 }

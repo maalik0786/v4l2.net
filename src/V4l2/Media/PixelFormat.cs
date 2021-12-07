@@ -9,7 +9,6 @@ namespace Iot.Device.Media.Media;
 /// <summary>
 /// The pixel format of a video device.
 /// </summary>
-// ReSharper disable InconsistentNaming
 public enum PixelFormat : uint
 {
 	/// <summary>
@@ -811,7 +810,7 @@ public enum PixelFormat : uint
 	/// <summary>
 	/// D4XX
 	/// </summary>
-	D4XX = 1482175556
+	D4XX = 1482175556,
 }
 
 /// <summary>

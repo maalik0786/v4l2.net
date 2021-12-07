@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Iot.Device.Media.Interop.Unix.Libc;
@@ -15,9 +16,9 @@ namespace Iot.Device.Media.Media.Devices;
 internal class UnixVideoDevice : VideoDevice
 {
 	private const string DefaultDevicePath = "/dev/video";
-	private const int BufferCount = 4;
+	private const int BufferCount = 1;
 	private int _deviceFileDescriptor = -1;
-	private static readonly object s_initializationLock = new();
+	private static readonly object s_initializationLock = new object();
 	/// <summary>
 	/// Path to video resources located on the platform.
 	/// </summary>
@@ -90,7 +91,7 @@ internal class UnixVideoDevice : VideoDevice
 		V4l2Struct(VideoSettings.VIDIOC_QUERYCTRL, ref query);
 
 		// Get current value
-		var ctrl = new v4l2_control {id = type};
+		var ctrl = new v4l2_control {id = type,};
 		V4l2Struct(VideoSettings.VIDIOC_G_CTRL, ref ctrl);
 		return new VideoDeviceValue
 		{
@@ -134,7 +135,7 @@ internal class UnixVideoDevice : VideoDevice
 		var result = new List<(uint Width, uint Height)>();
 		while (V4l2Struct(VideoSettings.VIDIOC_ENUM_FRAMESIZES, ref size) != -1)
 		{
-			result.Add((size.discrete.width, size.discrete.height));
+			result.Add((size.union.discrete.width, size.union.discrete.height));
 			size.index++;
 		}
 		return result;
@@ -146,12 +147,12 @@ internal class UnixVideoDevice : VideoDevice
 		{
 			// Start data stream
 			var type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE;
-			Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, (int) VideoSettings.VIDIOC_STREAMON,
+			var status = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, RawVideoSettings.VIDIOC_STREAMON,
 				new IntPtr(&type));
 			var dataBuffer = GetFrameData(buffers);
 
 			// Close data stream
-			Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, (int) VideoSettings.VIDIOC_STREAMOFF,
+			status = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, RawVideoSettings.VIDIOC_STREAMOFF,
 				new IntPtr(&type));
 			UnmappingFrameBuffers(buffers);
 			return dataBuffer;
@@ -164,9 +165,9 @@ internal class UnixVideoDevice : VideoDevice
 		var frame = new v4l2_buffer
 		{
 			type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE,
-			memory = v4l2_memory.V4L2_MEMORY_MMAP
+			memory = v4l2_memory.V4L2_MEMORY_MMAP,
 		};
-		V4l2Struct(VideoSettings.VIDIOC_DQBUF, ref frame);
+		var status = V4l2Struct(VideoSettings.VIDIOC_DQBUF, ref frame);
 
 		// Get data from pointer
 		var intptr = buffers[frame.index].Start;
@@ -174,7 +175,7 @@ internal class UnixVideoDevice : VideoDevice
 		Marshal.Copy(intptr, dataBuffer, 0, (int) buffers[frame.index].Length);
 
 		// Requeue the buffer
-		V4l2Struct(VideoSettings.VIDIOC_QBUF, ref frame);
+		status = V4l2Struct(VideoSettings.VIDIOC_QBUF, ref frame);
 		return dataBuffer;
 	}
 
@@ -187,7 +188,7 @@ internal class UnixVideoDevice : VideoDevice
 			type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE,
 			memory = v4l2_memory.V4L2_MEMORY_MMAP
 		};
-		V4l2Struct(VideoSettings.VIDIOC_REQBUFS, ref req);
+		var status = V4l2Struct(VideoSettings.VIDIOC_REQBUFS, ref req);
 
 		// Mapping the applied buffer to user space
 		var buffers = new V4l2FrameBuffer[BufferCount];
@@ -199,7 +200,7 @@ internal class UnixVideoDevice : VideoDevice
 				type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE,
 				memory = v4l2_memory.V4L2_MEMORY_MMAP
 			};
-			V4l2Struct(VideoSettings.VIDIOC_QUERYBUF, ref buffer);
+			status = V4l2Struct(VideoSettings.VIDIOC_QUERYBUF, ref buffer);
 			buffers[i].Length = buffer.length;
 			buffers[i].Start = Interop.Unix.Libc.Interop.mmap(IntPtr.Zero, (int) buffer.length,
 				MemoryMappedProtections.PROT_READ | MemoryMappedProtections.PROT_WRITE,
@@ -215,7 +216,7 @@ internal class UnixVideoDevice : VideoDevice
 				type = v4l2_buf_type.V4L2_BUF_TYPE_VIDEO_CAPTURE,
 				memory = v4l2_memory.V4L2_MEMORY_MMAP
 			};
-			V4l2Struct(VideoSettings.VIDIOC_QBUF, ref buffer);
+			status = V4l2Struct(VideoSettings.VIDIOC_QBUF, ref buffer);
 		}
 		return buffers;
 	}
@@ -229,7 +230,6 @@ internal class UnixVideoDevice : VideoDevice
 
 	private void SetVideoConnectionSettings()
 	{
-		FillVideoConnectionSettings();
 		// Set capture format
 		var format = new v4l2_format
 		{
@@ -244,98 +244,97 @@ internal class UnixVideoDevice : VideoDevice
 				}
 			}
 		};
-		V4l2Struct(VideoSettings.VIDIOC_S_FMT, ref format);
+		var status = V4l2Struct(VideoSettings.VIDIOC_S_FMT, ref format);
 
 		// Set exposure type
-		var ctrl = new v4l2_control
+		/*v4l2_control ctrl = new v4l2_control
 		{
-			id = VideoDeviceValueType.ExposureType, value = (int) Settings.ExposureType
+				id = VideoDeviceValueType.ExposureType,
+				value = (int)Settings.ExposureType
 		};
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
-
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);*/
+		/*
 		// Set exposure time
 		// If exposure type is auto, this field is invalid
 		ctrl.id = VideoDeviceValueType.ExposureTime;
 		ctrl.value = Settings.ExposureTime;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set brightness
 		ctrl.id = VideoDeviceValueType.Brightness;
 		ctrl.value = Settings.Brightness;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set contrast
 		ctrl.id = VideoDeviceValueType.Contrast;
 		ctrl.value = Settings.Contrast;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set saturation
 		ctrl.id = VideoDeviceValueType.Saturation;
 		ctrl.value = Settings.Saturation;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set sharpness
 		ctrl.id = VideoDeviceValueType.Sharpness;
 		ctrl.value = Settings.Sharpness;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set gain
 		ctrl.id = VideoDeviceValueType.Gain;
 		ctrl.value = Settings.Gain;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set gamma
 		ctrl.id = VideoDeviceValueType.Gamma;
 		ctrl.value = Settings.Gamma;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set power line frequency
 		ctrl.id = VideoDeviceValueType.PowerLineFrequency;
-		ctrl.value = (int) Settings.PowerLineFrequency;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		ctrl.value = (int)Settings.PowerLineFrequency;
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set white balance effect
 		ctrl.id = VideoDeviceValueType.WhiteBalanceEffect;
-		ctrl.value = (int) Settings.WhiteBalanceEffect;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		ctrl.value = (int)Settings.WhiteBalanceEffect;
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set white balance temperature
 		ctrl.id = VideoDeviceValueType.WhiteBalanceTemperature;
 		ctrl.value = Settings.WhiteBalanceTemperature;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set color effect
 		ctrl.id = VideoDeviceValueType.ColorEffect;
-		ctrl.value = (int) Settings.ColorEffect;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		ctrl.value = (int)Settings.ColorEffect;
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set scene mode
 		ctrl.id = VideoDeviceValueType.SceneMode;
-		ctrl.value = (int) Settings.SceneMode;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		ctrl.value = (int)Settings.SceneMode;
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set rotate
 		ctrl.id = VideoDeviceValueType.Rotate;
 		ctrl.value = Settings.Rotate;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set horizontal flip
 		ctrl.id = VideoDeviceValueType.HorizontalFlip;
-		ctrl.value = Settings.HorizontalFlip
-			? 1
-			: 0;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		ctrl.value = Settings.HorizontalFlip ? 1 : 0;
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
 
 		// Set vertical flip
 		ctrl.id = VideoDeviceValueType.VerticalFlip;
-		ctrl.value = Settings.VerticalFlip
-			? 1
-			: 0;
-		V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		ctrl.value = Settings.VerticalFlip ? 1 : 0;
+		status = V4l2Struct(VideoSettings.VIDIOC_S_CTRL, ref ctrl);
+		*/
 	}
 
 	private void FillVideoConnectionSettings()
 	{
+		return;
 		if (Settings.CaptureSize.Equals(default))
 			Settings.CaptureSize = MaxSize;
 		if (Settings.ExposureType.Equals(default))
@@ -421,9 +420,13 @@ internal class UnixVideoDevice : VideoDevice
 	/// <returns>The ioctl result</returns>
 	private int V4l2Struct<T>(VideoSettings request, ref T @struct) where T : struct
 	{
+		var ioctlCode = RawVideoSettings.VideoSettingsMap[request];
 		var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(@struct));
-		Marshal.StructureToPtr(@struct, ptr, true);
-		var result = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, (int) request, ptr);
+		Marshal.StructureToPtr(@struct, ptr, false);
+		var result = Interop.Unix.Libc.Interop.ioctl(_deviceFileDescriptor, ioctlCode, ptr);
+		var errno = Marshal.GetLastWin32Error();
+		Debug.WriteLine(
+			request + " - " + ioctlCode + $" {result.ToString()}/{errno.ToString()}");
 		@struct = Marshal.PtrToStructure<T>(ptr);
 		return result;
 	}
